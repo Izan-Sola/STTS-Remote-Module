@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>STTS</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <!-- Order matters: onnxruntime-web first, then the VAD bundle.
+         Together they expose window.ort and window.vad (vad.MicVAD). -->
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/ort.wasm.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.29/dist/bundle.min.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <header>
+            <h1>STTS</h1>
+            <div id="status" class="idle">idle</div>
+        </header>
+
+        <div class="controls">
+            <button id="mic-toggle" type="button">🎤 Enable mic</button>
+            <span id="wake-badge" class="badge">wake: —</span>
+            <span id="whisper-badge" class="badge">whisper: —</span>
+        </div>
+
+        <main id="log" aria-live="polite"></main>
+
+        <footer>
+            <input id="type-input" type="text" placeholder="…or type a prompt and hit Enter" autocomplete="off" />
+        </footer>
+    </div>
+    <script type="module" src="/app.js"></script>
+</body>
+
+</html>

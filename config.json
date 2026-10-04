@@ -1,0 +1,35 @@
+{
+    "port": 3131,
+    "whisper": {
+        "url": "http://100.98.234.114/transcribe",
+        "requestTimeoutMs": 60000,
+        "healthTimeoutMs": 2500
+    },
+    "tts": {
+        "bin": "edge-tts",
+        "voice": "en-US-AnaNeural",
+        "rate": "+20%",
+        "maxChars": 4000
+    },
+    "pi": {
+        "bin": "pi",
+        "cwd": null,
+        "timeoutMs": 180000
+    },
+    "wake": {
+        "required": true,
+        "words": [
+            "lily",
+            "legally",
+            "dealy",
+            "clearly",
+            "lili",
+            "lilly",
+            "lilí",
+            "really",
+            "leally",
+            "leeli",
+            "lil"
+        ]
+    }
+}
