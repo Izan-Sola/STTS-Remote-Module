@@ -22,6 +22,7 @@ let currentAudio = null
 let currentAudioUrl = null
 
 let WAKE_WORDS = []
+let LEADING_ONLY = []   // wake words that only count in the first few words (see wake-word helpers)
 let REQUIRE_WAKE = true
 
     // ─── boot ─────────────────────────────────────────────────────
@@ -30,6 +31,7 @@ let REQUIRE_WAKE = true
             const r = await fetch('/api/health')
             const h = await r.json()
             WAKE_WORDS = h.wakeWord?.words || []
+            LEADING_ONLY = h.wakeWord?.leadingOnly || []
             REQUIRE_WAKE = !!h.wakeWord?.required
             wakeBadge.textContent = REQUIRE_WAKE
                 ? `wake: ${WAKE_WORDS.slice(0, 3).join('/')}…`
@@ -41,6 +43,13 @@ let REQUIRE_WAKE = true
             setStatus('err', 'health failed')
         }
     })()
+
+// ─── activity feed: what the brain just did on this machine ───
+new EventSource('/api/events').onmessage = (e) => {
+    const a = JSON.parse(e.data)
+    if (a.ok) appendSys(`${a.text} · ${(a.ms / 1000).toFixed(1)}s`)
+    else appendErr(a.text)
+}
 
 // ─── mic toggle ───────────────────────────────────────────────
 micBtn.addEventListener('click', async () => {
@@ -139,13 +148,11 @@ async function handleSpeechEnd(float32) {
 
     // wake-word gate
     if (REQUIRE_WAKE && WAKE_WORDS.length) {
-        const lower = text.toLowerCase()
-        const hit = WAKE_WORDS.some(w => lower.includes(w))
-        if (!hit) {
+        if (!hasWakeWord(text)) {
             setStatus(micOn ? 'listening' : 'idle', 'no wake word')
             return
         }
-        text = stripWakeWords(text, WAKE_WORDS).trim() || text
+        text = stripWakeWords(text).trim() || text
     }
 
     await runPi(text)
@@ -299,13 +306,21 @@ function parseSseBlock(block) {
 }
 
 // ─── wake-word helpers ────────────────────────────────────────
-function stripWakeWords(text, words) {
-    let out = text
-    for (const w of words) {
-        const re = new RegExp(`\\b${escapeRegExp(w)}\\b[,.!?]?`, 'gi')
-        out = out.replace(re, ' ')
-    }
-    return out.replace(/\s+/g, ' ').trim()
+// Whole words only, so "lil" no longer fires on "still" or "little". Words listed in config
+// wake.leadingOnly are everyday English that whisper hears as "Lily" ("really"), so they only
+// count at the start of an utterance, optionally after "hey" / "ok".
+const wordRe = (w, flags = 'iu', tail = '') =>
+    new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegExp(w)}(?![\\p{L}\\p{N}])${tail}`, flags)
+const leadRe = (w) =>
+    new RegExp(`^\\s*(?:(?:hey|hi|ok|okay|oye|hola)\\W+)?${escapeRegExp(w)}(?![\\p{L}\\p{N}])\\W*`, 'iu')
+const anywhereWords = () => WAKE_WORDS.filter(w => !LEADING_ONLY.includes(w))
+
+function hasWakeWord(text) {
+    return anywhereWords().some(w => wordRe(w).test(text)) || LEADING_ONLY.some(w => leadRe(w).test(text))
+}
+function stripWakeWords(text) {
+    const out = anywhereWords().reduce((t, w) => t.replace(wordRe(w, 'giu', '[,.!?]?'), ' '), text)
+    return LEADING_ONLY.reduce((t, w) => t.replace(leadRe(w), ' '), out).replace(/\s+/g, ' ').trim()
 }
 function escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') }
 

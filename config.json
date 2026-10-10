@@ -1,12 +1,12 @@
 {
     "port": 3131,
     "whisper": {
-        "url": "http://100.98.234.114/transcribe",
+        "url": "http://100.98.234.114:8776/transcribe",
         "requestTimeoutMs": 60000,
         "healthTimeoutMs": 2500
     },
     "tts": {
-        "bin": "edge-tts",
+        "bin": "/mnt/GAMES/test/bin/edge-tts",
         "voice": "en-US-AnaNeural",
         "rate": "+20%",
         "maxChars": 4000
@@ -31,5 +31,20 @@
             "leeli",
             "lil"
         ]
+    },
+    "companionUrl": "http://localhost:8768",
+    "timeouts": {
+        "screenshotMs": 10000,
+        "fileAppearMs": 3000,
+        "fileAppearPollMs": 100,
+        "askUserMs": 120000,
+        "piMs": 180000,
+        "companionRequestMs": 10000
+    },
+    "brain": {
+        "url": "http://100.98.234.114:8770/stts",
+        "deviceId": "desktop",
+        "token": "00b6be35f7fad042c2f447c5ca5c5115f7fb929e5cd2bc7b703ec333585e1dff",
+        "timeoutMs": 660000
     }
 }
